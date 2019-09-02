@@ -41,7 +41,7 @@ class SDK:
             {
                 'img': base64.b64encode(
                     task['img'],
-                ).decode(),
+                ).decode() if isinstance(task['img'], bytes) else task['img'],
                 'predict': task.get('predict'),
                 'code': task.get('code'),
                 'type': task_type,
