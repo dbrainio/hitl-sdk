@@ -2,7 +2,7 @@ import asyncio
 import base64
 from dataclasses import dataclass, field
 
-import requests_async as requests
+import aiohttp
 
 
 @dataclass
@@ -21,20 +21,21 @@ class SDK:
         if self.system_info_token:
             params['system_info'] = self.system_info_token
 
-        resp = await requests.request(
-            method=method,
-            url=f'{self.host}/tasks',
-            params=params,
-            json=data,
-        )
 
-        try:
-            resp.raise_for_status()
-        except Exception as e:
-            print(resp.content)
-            raise e
+        async with aiohttp.ClientSession() as session:
+            async with session.request(
+                    method=method,
+                    url=f'{self.host}/tasks',
+                    params=params,
+                    json=data,
+            ) as resp:
+                try:
+                    resp.raise_for_status()
+                except Exception as e:
+                    print(resp.content)
+                    raise e
 
-        return resp.json()
+                return await resp.json()
 
     async def create_tasks(self, tasks: [dict], document_id: str = None, task_type: str = 'standard') -> [dict]:
         body = [
