@@ -37,7 +37,13 @@ class SDK:
 
                 return await resp.json()
 
-    async def create_tasks(self, tasks: [dict], document_id: str = None, task_type: str = 'standard') -> [dict]:
+    async def create_tasks(
+        self,
+        tasks: [dict],
+        document_id: str = None,
+        task_type: str = 'standard',
+        mock: bool = False
+    ) -> [dict]:
         body = [
             {
                 'img': base64.b64encode(
@@ -47,6 +53,7 @@ class SDK:
                 'code': task.get('code'),
                 'type': task_type,
                 'document_id': task.get('document_id') if not document_id else document_id,
+                'pipeline': task.get('pipeline') if not mock else ['mock'],
             }
             for task in tasks
             if task.get('img')
@@ -97,9 +104,9 @@ class SDK:
             await asyncio.sleep(timeout)
         return list(self.tasks.values())
 
-    async def create_and_wait(self, tasks: list, document_id: str = None, timeout: float = 5.) -> [dict]:
+    async def create_and_wait(self, tasks: list, timeout: float = 5., **kwargs) -> [dict]:
         await self.create_tasks(
             tasks=tasks,
-            document_id=document_id,
+            **kwargs,
         )
         return await self.wait_until_complete(timeout=timeout)
