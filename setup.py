@@ -2,13 +2,14 @@ from setuptools import setup, find_packages
 
 
 install_requires = [
-    'aiohttp',
+    'aiohttp==3.5.4',
+    'dataclasses-json==0.3.5',
 ]
 
 CONFIG = {
     'name': 'hitl-sdk',
     'url': '',
-    'version': '0.1.0',
+    'version': '0.2.0',
     'author': 'NilhEx',
     'install_requires': install_requires,
     'packages': find_packages(),
