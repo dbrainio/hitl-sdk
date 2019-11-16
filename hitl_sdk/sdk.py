@@ -9,14 +9,19 @@ import datetime
 
 import aiohttp
 
+Value = Union[str, List[str]]
+
 
 @dataclasses_json.dataclass_json
 @dataclass
 class Task:
     id: Optional[str] = None
-    result: Optional[str] = None
-    field_name: Optional[str] = None
-    code: Optional[str] = None
+    state: Optional[str] = None
+
+    document_type: Optional[str] = None
+    document_id: Optional[str] = None
+    field_type: Optional[str] = None
+
     created_at: Optional[datetime.datetime] = field(
         default=None,
         metadata=dataclasses_json.config(
@@ -30,11 +35,16 @@ class Task:
         ),
     )
 
+    result: Optional[Value] = None
+
     # Using when creating
-    img: Optional[Union[str, bytes]] = None
-    predict: Optional[str] = None
+    image: Optional[Union[str, bytes]] = None
+    predict: Optional[Value] = None
+    predict_confidence: Optional[float] = None
     type: str = 'standard'
-    pipeline: List[str] = field(default_factory=lambda: ['validation', 'ocr'])
+    pipeline: Optional[List[str]] = None
+    field_name: Optional[str] = None
+    code: Optional[str] = None
 
 
 @dataclass
@@ -86,7 +96,7 @@ class SDK:
     async def create_tasks(
             self,
             tasks: List[Task],
-            document_name: Optional[str] = None,
+            document_type: Optional[str] = None,
             document_id: Optional[str] = None,
             task_type: Optional[str] = 'standard',
             mock: bool = False
@@ -94,18 +104,19 @@ class SDK:
         body = [
             {
                 'img': base64.b64encode(
-                    task.img,
-                ).decode() if isinstance(task.img, bytes) else task.img,
+                    task.image,
+                ).decode() if isinstance(task.image, bytes) else task.image,
                 'predict': task.predict,
+                'predict_confidence': task.predict_confidence,
                 'type': task_type,
                 'field_name': task.field_name,
-                'document_name': document_name,
+                'document_type': document_type,
                 'code': task.code,
                 'document_id': document_id,
                 'pipeline': task.pipeline if not mock else ['mock'],
             }
             for task in tasks
-            if task.img
+            if task.image
         ]
         if not body:
             return []
@@ -161,11 +172,11 @@ class SDK:
         return list(self.tasks.values())
 
     async def create_and_wait(self,
-                              tasks: List[Task], document_name: Optional[str] = None,
+                              tasks: List[Task], document_type: Optional[str] = None,
                               timeout: float = 5., **kwargs) -> List[Task]:
         await self.create_tasks(
             tasks=tasks,
-            document_name=document_name,
+            document_type=document_type,
             **kwargs,
         )
         return await self.wait_until_complete(timeout=timeout)
