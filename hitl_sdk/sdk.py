@@ -6,6 +6,7 @@ import dataclasses_json
 import asyncio
 import base64
 import datetime
+import dateutil.parser
 
 import aiohttp
 
@@ -25,13 +26,13 @@ class Task:
     created_at: Optional[datetime.datetime] = field(
         default=None,
         metadata=dataclasses_json.config(
-            decoder=lambda _: datetime.datetime.fromisoformat(_) if _ else None
+            decoder=lambda _: dateutil.parser.parse(_) if _ else None
         ),
     )
     completed_at: Optional[datetime.datetime] = field(
         default=None,
         metadata=dataclasses_json.config(
-            decoder=lambda _: datetime.datetime.fromisoformat(_) if _ else None
+            decoder=lambda _: dateutil.parser.parse(_) if _ else None
         ),
     )
 

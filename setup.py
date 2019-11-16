@@ -4,6 +4,7 @@ from setuptools import setup, find_packages
 install_requires = [
     'aiohttp==3.5.4',
     'dataclasses-json==0.3.5',
+    'python-dateutil==2.8.0',
 ]
 
 CONFIG = {
