@@ -1,5 +1,6 @@
 from typing import *
 
+import os
 from dataclasses import dataclass, field
 import dataclasses_json
 
@@ -67,7 +68,8 @@ class SDK:
     async def _request(self,
                        method: str,
                        params: Optional[dict] = None,
-                       data: Optional[Union[dict, list]] = None) -> [dict]:
+                       data: Optional[Union[dict, list]] = None,
+                       endpoint: str = 'tasks') -> List[dict]:
         headers = {
             'Content-Type': 'application/json',
         }
@@ -82,7 +84,7 @@ class SDK:
         async with aiohttp.ClientSession() as session:
             async with session.request(
                     method=method,
-                    url=f'{self.host}/tasks',
+                    url=os.path.join(self.host, endpoint),
                     params=params,
                     json=data,
             ) as resp:
@@ -125,6 +127,42 @@ class SDK:
         tasks = await self._request(
             method='POST',
             data=body,
+        )
+
+        for task in tasks:
+            task = Task.from_dict(task)
+            self.tasks[self._get_task_key(task)] = task
+
+        return list(self.tasks.values())
+
+    async def create_document(
+            self,
+            images: List[Union[bytes, str]],
+            document_type: Optional[str] = None,
+            document_id: Optional[str] = None,
+    ) -> List[Task]:
+        body = [
+            {
+                'images': [
+                    base64.b64encode(
+                        image,
+                    ).decode()
+                    if isinstance(image, bytes)
+                    else
+                    image
+                    for image in images
+                ],
+                'document_type': document_type,
+                'document_id': document_id,
+            }
+        ]
+        if not body:
+            return []
+
+        tasks = await self._request(
+            method='POST',
+            data=body,
+            endpoint='documents',
         )
 
         for task in tasks:
