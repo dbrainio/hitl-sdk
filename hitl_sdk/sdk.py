@@ -102,7 +102,7 @@ class SDK:
             document_type: Optional[str] = None,
             document_id: Optional[str] = None,
             task_type: Optional[str] = 'standard',
-            mock: bool = False
+            mock: bool = False,
     ) -> List[Task]:
         body = [
             {
@@ -116,7 +116,7 @@ class SDK:
                 'document_type': document_type,
                 'code': task.code,
                 'document_id': document_id,
-                'pipeline': task.pipeline if not mock else ['mock'],
+                'pipeline': task.pipeline,
             }
             for task in tasks
             if task.image
@@ -124,13 +124,18 @@ class SDK:
         if not body:
             return []
 
-        tasks = await self._request(
+        params = {}
+        if mock:
+            params['mock'] = True
+
+        resp = await self._request(
             method='POST',
             data=body,
+            params=params,
         )
 
-        for task in tasks:
-            task = Task.from_dict(task)
+        for item in resp:
+            task = Task.from_dict(item)
             self.tasks[self._get_task_key(task)] = task
 
         return list(self.tasks.values())
@@ -140,6 +145,7 @@ class SDK:
             images: List[Union[bytes, str]],
             document_type: Optional[str] = None,
             document_id: Optional[str] = None,
+            mock: bool = False,
     ) -> List[Task]:
         body = [
             {
@@ -159,14 +165,19 @@ class SDK:
         if not body:
             return []
 
-        tasks = await self._request(
+        params = {}
+        if mock:
+            params['mock'] = True
+
+        resp = await self._request(
             method='POST',
             data=body,
             endpoint='documents',
+            params=params,
         )
 
-        for task in tasks:
-            task = Task.from_dict(task)
+        for item in resp:
+            task = Task.from_dict(item)
             self.tasks[self._get_task_key(task)] = task
 
         return list(self.tasks.values())
