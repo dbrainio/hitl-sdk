@@ -126,7 +126,7 @@ class SDK:
 
         params = {}
         if mock:
-            params['mock'] = True
+            params['mock'] = 'true'
 
         resp = await self._request(
             method='POST',
@@ -167,7 +167,7 @@ class SDK:
 
         params = {}
         if mock:
-            params['mock'] = True
+            params['mock'] = 'true'
 
         resp = await self._request(
             method='POST',
