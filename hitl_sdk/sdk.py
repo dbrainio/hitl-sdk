@@ -103,6 +103,7 @@ class SDK:
             document_id: Optional[str] = None,
             task_type: Optional[str] = 'standard',
             mock: bool = False,
+            processing_type: Optional[str] = None,
     ) -> List[Task]:
         body = [
             {
@@ -127,6 +128,8 @@ class SDK:
         params = {}
         if mock:
             params['mock'] = 'true'
+        if processing_type:
+            params['processing_type'] = processing_type
 
         resp = await self._request(
             method='POST',
@@ -146,6 +149,7 @@ class SDK:
             document_type: Optional[str] = None,
             document_id: Optional[str] = None,
             mock: bool = False,
+            processing_type: Optional[str] = None,
     ) -> List[Task]:
         body = [
             {
@@ -168,6 +172,8 @@ class SDK:
         params = {}
         if mock:
             params['mock'] = 'true'
+        if processing_type:
+            params['processing_type'] = processing_type
 
         resp = await self._request(
             method='POST',

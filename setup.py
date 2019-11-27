@@ -10,7 +10,7 @@ install_requires = [
 CONFIG = {
     'name': 'hitl-sdk',
     'url': '',
-    'version': '0.2.2',
+    'version': '0.2.3',
     'author': 'NilhEx',
     'install_requires': install_requires,
     'packages': find_packages(),
