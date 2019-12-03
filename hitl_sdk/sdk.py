@@ -240,9 +240,9 @@ class SDK:
                 for v in self.tasks.values()
                 if not v.completed_at
             ),
-            int(
+            int(bool(
                 self.document and not self.document.completed_at
-            ),
+            )),
         )
 
     async def wait_until_complete(self, timeout: float = 5.) -> List[Task]:
