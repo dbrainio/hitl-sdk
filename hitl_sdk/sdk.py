@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from typing import *
 
 import os
@@ -40,7 +38,7 @@ class Task:
     )
 
     result: Optional[Value] = None
-    tasks: List[Task] = field(default_factory=list)
+    tasks: List['Task'] = field(default_factory=list)
 
     # Using when creating
     image: Optional[Union[str, bytes]] = None
