@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import *
 
 import os
@@ -38,6 +40,7 @@ class Task:
     )
 
     result: Optional[Value] = None
+    tasks: List[Task] = field(default_factory=list)
 
     # Using when creating
     image: Optional[Union[str, bytes]] = None
@@ -54,7 +57,8 @@ class SDK:
     host: str
     token: Optional[str] = None
     system_info_token: Optional[str] = None
-    tasks: Dict[str, Task] = field(default_factory=lambda: {})
+    tasks: Dict[str, Task] = field(default_factory=dict)
+    document: Optional[Task] = None
 
     @staticmethod
     def _get_task_key(task: Task) -> str:
@@ -148,28 +152,30 @@ class SDK:
             images: List[Union[bytes, str]],
             document_type: Optional[str] = None,
             document_id: Optional[str] = None,
+            only_classify: bool = False,
             mock: bool = False,
             processing_type: Optional[str] = None,
-    ) -> List[Task]:
-        body = [
-            {
-                'images': [
-                    base64.b64encode(
-                        image,
-                    ).decode()
-                    if isinstance(image, bytes)
-                    else
-                    image
-                    for image in images
-                ],
-                'document_type': document_type,
-                'document_id': document_id,
-            }
-        ]
-        if not body:
-            return []
+    ) -> Optional[Task]:
+        payload = {
+            'images': [
+                base64.b64encode(
+                    image,
+                ).decode()
+                if isinstance(image, bytes)
+                else
+                image
+                for image in images
+            ],
+            'document_type': document_type,
+            'document_id': document_id,
+        }
+
+        if not payload:
+            return None
 
         params = {}
+        if only_classify:
+            params['only_classify'] = 'true'
         if mock:
             params['mock'] = 'true'
         if processing_type:
@@ -177,16 +183,32 @@ class SDK:
 
         resp = await self._request(
             method='POST',
-            data=body,
-            endpoint='documents',
+            endpoint='document',
+            data=payload,
             params=params,
         )
 
-        for item in resp:
-            task = Task.from_dict(item)
-            self.tasks[self._get_task_key(task)] = task
+        self.document = Task.from_dict(resp)
 
-        return list(self.tasks.values())
+        return self.document
+
+    async def sync_document(self):
+        try:
+            resp = await self._request(
+                method='GET',
+                endpoint='document',
+                params={
+                    'id': self.document.id,
+                }
+            )
+
+            self.document = Task.from_dict(resp)
+
+            for task in self.document.tasks:
+                task = Task.from_dict(task)
+                self.tasks[self._get_task_key(task)] = task
+        except Exception as e:
+            print(e)
 
     async def sync_tasks(self):
         tasks_ids = [
@@ -213,18 +235,32 @@ class SDK:
         except Exception as e:
             print(e)
 
-    def in_work_count(self) -> int:
-        return sum(
-            1
-            for v in self.tasks.values()
-            if not v.completed_at
+    def in_work_count(self) -> Tuple[int, int]:
+        return (
+            sum(
+                1
+                for v in self.tasks.values()
+                if not v.completed_at
+            ),
+            int(
+                self.document and not self.document.completed_at
+            ),
         )
 
     async def wait_until_complete(self, timeout: float = 5.) -> List[Task]:
-        while self.in_work_count() != 0:
-            print(f'In work {self.in_work_count()} tasks. Sync...')
-            await self.sync_tasks()
+        while True:
+            in_work = self.in_work_count()
+            if not sum(in_work):
+                break
+
             await asyncio.sleep(timeout)
+
+            if in_work[1]:
+                print(f'HITL: In work {in_work[1]} document. Sync...')
+                await self.sync_document()
+            else:
+                print(f'HITL: In work {in_work[0]} tasks. Sync...')
+                await self.sync_tasks()
         return list(self.tasks.values())
 
     async def create_and_wait(self,
