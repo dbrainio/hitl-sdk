@@ -151,6 +151,7 @@ class SDK:
             document_type: Optional[str] = None,
             document_id: Optional[str] = None,
             only_classify: bool = False,
+            only_ocr: bool = False,
             mock: bool = False,
             processing_type: Optional[str] = None,
     ) -> Optional[Task]:
@@ -174,6 +175,8 @@ class SDK:
         params = {}
         if only_classify:
             params['only_classify'] = 'true'
+        if only_ocr:
+            params['only_ocr'] = 'true'
         if mock:
             params['mock'] = 'true'
         if processing_type:
