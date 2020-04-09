@@ -42,12 +42,17 @@ class Task:
 
     # Using when creating
     image: Optional[Union[str, bytes]] = None
+    images: List[Union[str, bytes]] = field(default_factory=list)
     predict: Optional[Value] = None
     predict_confidence: Optional[float] = None
     type: str = 'standard'
     pipeline: Optional[List[str]] = None
     field_name: Optional[str] = None
     code: Optional[str] = None
+
+    def __post_init__(self):
+        if self.image:
+            self.images.append(self.image)
 
 
 @dataclass
@@ -109,9 +114,14 @@ class SDK:
     ) -> List[Task]:
         body = [
             {
-                'img': base64.b64encode(
-                    task.image,
-                ).decode() if isinstance(task.image, bytes) else task.image,
+                'images': [
+                    base64.b64encode(
+                        image,
+                    ).decode()
+                    if isinstance(image, bytes) else
+                    image
+                    for image in task.images
+                ],
                 'predict': task.predict,
                 'predict_confidence': task.predict_confidence,
                 'type': task_type,
