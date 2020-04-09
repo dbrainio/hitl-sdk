@@ -132,7 +132,7 @@ class SDK:
                 'pipeline': task.pipeline,
             }
             for task in tasks
-            if task.image
+            if task.images
         ]
         if not body:
             return []
