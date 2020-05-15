@@ -60,6 +60,7 @@ class Task:
 class SDK:
     host: str
     token: Optional[str] = None
+    license_id: Optional[str] = None
     system_info_token: Optional[str] = None
     tasks: Dict[str, Task] = field(default_factory=dict)
     document: Optional[Task] = None
@@ -83,6 +84,9 @@ class SDK:
         }
         if params is None:
             params = {}
+        
+        if self.license_id:
+            params['license_id'] = self.license_id
 
         if self.token:
             headers['Authorization'] = f'Token {self.token}'
