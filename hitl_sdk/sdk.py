@@ -49,6 +49,7 @@ class Task:
     type: str = 'standard'
     pipeline: Optional[List[str]] = None
     field_name: Optional[str] = None
+    is_checkbox_array: bool = False
     code: Optional[str] = None
 
     def __post_init__(self):
@@ -143,6 +144,7 @@ class SDK:
                 'code': task.code,
                 'document_id': document_id,
                 'pipeline': task.pipeline,
+                'field_type': 'bool_array' if task.is_checkbox_array else None,
             }
             for task in tasks
             if task.images
