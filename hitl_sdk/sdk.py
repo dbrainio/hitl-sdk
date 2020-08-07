@@ -98,6 +98,7 @@ class SDK:
             async with session.request(
                     method=method,
                     url=os.path.join(self.host, endpoint),
+                    headers=headers,
                     params=params,
                     json=data,
             ) as resp:
