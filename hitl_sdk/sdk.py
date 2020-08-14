@@ -27,13 +27,13 @@ class Task:
     created_at: Optional[datetime.datetime] = field(
         default=None,
         metadata=dataclasses_json.config(
-            decoder=lambda _: dateutil.parser.parse(_) if _ else None
+            decoder=lambda x: dateutil.parser.parse(x) if x else None
         ),
     )
     completed_at: Optional[datetime.datetime] = field(
         default=None,
         metadata=dataclasses_json.config(
-            decoder=lambda _: dateutil.parser.parse(_) if _ else None
+            decoder=lambda x: dateutil.parser.parse(x) if x else None
         ),
     )
 
@@ -55,6 +55,11 @@ class Task:
     def __post_init__(self):
         if self.image:
             self.images.append(self.image)
+
+    def get_result(self) -> Optional[Value]:
+        if self.completed_at:
+            return self.result
+        return self.result or self.predict or ''
 
 
 @dataclass
@@ -85,7 +90,7 @@ class SDK:
         }
         if params is None:
             params = {}
-        
+
         if self.license_id:
             params['license_id'] = self.license_id
 
@@ -240,16 +245,23 @@ class SDK:
         except Exception as e:
             print(e)
 
-    async def sync_tasks(self):
+    async def sync_tasks(self) -> bool:
         tasks_ids = [
             _id.split(':')[0]
             for _id in filter(
-                lambda _: not self.tasks.get(_) or not self.tasks[_].completed_at,
+                lambda x: (
+                    not self.tasks.get(x)
+                    or
+                    not self.tasks[x].completed_at
+                ),
                 self.tasks.keys(),
             )
         ]
+
+        has_updates = False
+
         if not tasks_ids:
-            return
+            return has_updates
 
         try:
             tasks = await self._request(
@@ -262,8 +274,12 @@ class SDK:
             for task in tasks:
                 task = Task.from_dict(task)
                 self.tasks[self._get_task_key(task)] = task
+                if task.completed_at:
+                    has_updates = True
         except Exception as e:
             print(e)
+
+        return has_updates
 
     def in_work_count(self) -> Tuple[int, int]:
         return (
@@ -293,9 +309,11 @@ class SDK:
                 await self.sync_tasks()
         return list(self.tasks.values())
 
-    async def create_and_wait(self,
-                              tasks: List[Task], document_type: Optional[str] = None,
-                              timeout: float = 5., **kwargs) -> List[Task]:
+    async def create_and_wait(
+            self,
+            tasks: List[Task], document_type: Optional[str] = None,
+            timeout: float = 5., **kwargs
+    ) -> List[Task]:
         await self.create_tasks(
             tasks=tasks,
             document_type=document_type,
