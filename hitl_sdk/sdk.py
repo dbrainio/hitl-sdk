@@ -61,6 +61,9 @@ class Task:
             return self.result
         return self.result or self.predict or ''
 
+    def is_timeout(self) -> bool:
+        return self.state and 'timeout' in self.state
+
 
 @dataclass
 class SDK:
@@ -250,9 +253,9 @@ class SDK:
             _id.split(':')[0]
             for _id in filter(
                 lambda x: (
-                    not self.tasks.get(x)
-                    or
-                    not self.tasks[x].completed_at
+                        not self.tasks.get(x)
+                        or
+                        not self.tasks[x].completed_at
                 ),
                 self.tasks.keys(),
             )
