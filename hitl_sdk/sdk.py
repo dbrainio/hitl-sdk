@@ -102,7 +102,7 @@ class SDK:
         if self.system_info_token:
             params['system_info'] = self.system_info_token
 
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
             async with session.request(
                     method=method,
                     url=os.path.join(self.host, endpoint),
