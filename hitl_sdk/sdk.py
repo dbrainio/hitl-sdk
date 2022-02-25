@@ -1,17 +1,20 @@
-from typing import *
-
-import os
-from dataclasses import dataclass, field
-import dataclasses_json
-
 import asyncio
 import base64
 import datetime
-import dateutil.parser
+import os
+from dataclasses import dataclass, field
+from logging import Logger, getLogger
+from typing import Dict, Iterable, Iterator, List, Optional, Tuple, Union
 
 import aiohttp
+import dataclasses_json
+import dateutil.parser
 
 Value = Union[str, List[str]]
+
+
+def default_retry_strategy() -> Iterable:
+    return 5, 30
 
 
 @dataclasses_json.dataclass_json
@@ -73,6 +76,8 @@ class SDK:
     system_info_token: Optional[str] = None
     tasks: Dict[str, Task] = field(default_factory=dict)
     document: Optional[Task] = None
+    request_retry_strategy: Optional[Iterable] = default_retry_strategy()
+    logger: Logger = getLogger('hitl-sdk')
 
     @staticmethod
     def _get_task_key(task: Task) -> str:
@@ -87,7 +92,8 @@ class SDK:
                        method: str,
                        params: Optional[dict] = None,
                        data: Optional[Union[dict, list]] = None,
-                       endpoint: str = 'tasks') -> List[dict]:
+                       endpoint: str = 'tasks',
+                       retry_times: Iterator = None) -> List[dict]:
         headers = {
             'Content-Type': 'application/json',
         }
@@ -102,21 +108,39 @@ class SDK:
         if self.system_info_token:
             params['system_info'] = self.system_info_token
 
-        async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
-            async with session.request(
-                    method=method,
-                    url=os.path.join(self.host, endpoint),
-                    headers=headers,
-                    params=params,
-                    json=data,
-            ) as resp:
-                try:
+        try:
+            async with aiohttp.ClientSession(
+                    connector=aiohttp.TCPConnector(verify_ssl=False),
+                    raise_for_status=True,
+            ) as session:
+                async with session.request(
+                        method=method,
+                        url=os.path.join(self.host, endpoint),
+                        headers=headers,
+                        params=params,
+                        json=data,
+                ) as resp:
                     resp.raise_for_status()
-                except Exception as e:
-                    print(resp.content)
-                    raise e
+                    return await resp.json()
+        except Exception as e:
+            if retry_times is None:
+                if isinstance(self.request_retry_strategy, Iterable):
+                    retry_times = iter(self.request_retry_strategy)
+                else:
+                    retry_times = iter([])
 
-                return await resp.json()
+            for i in retry_times:
+                self.logger.warning(f"Request to hitl wasn't successfull. Wait {i} seconds to retry...")
+                await asyncio.sleep(i)
+                return await self._request(
+                    method=method,
+                    params=params,
+                    data=data,
+                    endpoint=endpoint,
+                    retry_times=retry_times)
+
+            self.logger.error(f"Error with hitl: {e}")
+            raise e
 
     async def create_tasks(
             self,
