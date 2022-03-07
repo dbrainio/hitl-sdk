@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 
 install_requires = [
-    'aiohttp>=3.5.4',
+    'aiohttp==3.6.2',
     'dataclasses-json==0.3.5',
     'python-dateutil==2.8.0',
 ]
@@ -10,7 +10,7 @@ install_requires = [
 CONFIG = {
     'name': 'hitl-sdk',
     'url': '',
-    'version': '0.3.8',
+    'version': '0.3.9',
     'author': 'Dbrain',
     'install_requires': install_requires,
     'packages': find_packages(),
