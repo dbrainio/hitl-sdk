@@ -1,11 +1,40 @@
+import base64
 import datetime
 from dataclasses import dataclass, field
+from io import BytesIO
 from typing import Iterable, List, Optional, Union
 
 import dataclasses_json
 import dateutil.parser
+from PIL import Image
 
 Value = Union[str, List[str]]
+
+
+def concat_v(images: List[Union[bytes, str]]):
+    imgs = []
+    for i in images:
+        if isinstance(i, str):
+            i = base64.b64decode(i.encode())
+        imfile = BytesIO(i)
+        im = Image.open(imfile)
+        imgs.append(im)
+
+    width = max(i.width for i in imgs)
+    height = sum(i.height for i in imgs)
+
+    dst = Image.new('RGB', (width, height))
+
+    y = 0
+    for i in imgs:
+        dst.paste(i, (0, y))
+        y += i.height
+
+    img = BytesIO()
+    dst.save(img, format='JPEG')
+    img = img.getvalue()
+
+    return img
 
 
 def default_retry_strategy() -> Iterable:

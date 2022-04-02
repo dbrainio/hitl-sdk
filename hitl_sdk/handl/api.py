@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 import time
@@ -5,6 +6,7 @@ from datetime import date
 from enum import Enum
 from typing import Any, Callable, Dict, Union
 
+import aiohttp.client_exceptions
 from aiohttp.client import ClientSession
 
 from .specs import get_ocr_spec
@@ -40,6 +42,9 @@ def default_version_factory():
 
 
 class Handl:
+    attempts = 30
+    attempt_delay = 1
+
     def __init__(
             self,
             url: str,
@@ -85,8 +90,12 @@ class Handl:
                 return self._jwt_token_cached
 
     async def _auth_headers(self) -> Dict[str, str]:
-        token = await self._jwt_token()
-        return {'authorization': f'Bearer {token}'}
+        for _ in range(self.attempts):
+            try:
+                token = await self._jwt_token()
+                return {'authorization': f'Bearer {token}'}
+            except aiohttp.client_exceptions.ClientConnectionError:
+                await asyncio.sleep(self.attempt_delay)
 
     async def _list_projects(self):
         url = f'{self._url}/projects'
@@ -144,7 +153,7 @@ class Handl:
             "type": "Standard",
             "reward_amount": "1",
             "expiration_timeout": 60 * 30,
-            "privacy": [self._group.value],
+            "privacy": [self._group],
             **spec,
         }
         url = f'{self._url}/projects'
@@ -192,13 +201,17 @@ class Handl:
 
     async def _request(self, url: str, method: str = 'GET', **kw) -> Any:
         headers = await self._auth_headers()
-        async with ClientSession() as sess:
-            async with sess.request(
-                    method=method,
-                    url=url,
-                    headers=headers,
-                    **kw,
-            ) as resp:
-                if resp.content_type == 'application/octet-stream':
-                    return json.loads(await resp.read())
-                return await resp.json()
+        for _ in range(self.attempts):
+            try:
+                async with ClientSession() as sess:
+                    async with sess.request(
+                            method=method,
+                            url=url,
+                            headers=headers,
+                            **kw,
+                    ) as resp:
+                        if resp.content_type == 'application/octet-stream':
+                            return json.loads(await resp.read())
+                        return await resp.json()
+            except aiohttp.client_exceptions.ClientConnectionError:
+                await asyncio.sleep(self.attempt_delay)

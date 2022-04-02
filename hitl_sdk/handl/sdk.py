@@ -7,7 +7,7 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 from uuid import uuid4
 
 from .api import Handl, OperationType
-from ..common import default_retry_strategy, Task
+from ..common import default_retry_strategy, Task, concat_v
 from ..env import (HANDL_GATEWAY, HANDL_GROUP, HANDL_PASSWORD, HANDL_PREFIX, HANDL_TASK_TIMEOUT, HANDL_USERNAME,
                    HANDL_VERSION)
 
@@ -49,14 +49,11 @@ class SDK:
                 continue
             uid = str(uuid4())
             name = f'{document_type}__{document_id}__{task.field_name}__{uid}.jpg'
-            image = task.images[0]
-            if isinstance(image, bytes):
-                content = image
-            else:
-                content = base64.b64decode(image.encode())
+            content = concat_v(task.images)
             img = await handl.create_task(name, content, task.predict, pid)
             task_id = img['id']
-            task[task_id] = task_id
+            task.id = task_id
+            task.created_at = datetime.utcnow()
             self.tasks[task_id] = task
 
         return list(self.tasks.values())
@@ -80,11 +77,7 @@ class SDK:
 
         uid = str(uuid4())
         name = f'{document_type}__{document_id}__{uid}.jpg'
-        image = images[0]
-        if isinstance(image, bytes):
-            content = image
-        else:
-            content = base64.b64decode(image.encode())
+        content = concat_v(images)
         img = await handl.create_task(name, content, '', pid)
         task_id = img['id']
 
@@ -107,7 +100,7 @@ class SDK:
         for result in results:
             task_id = result['id']
             if task_id in task.id:
-                task.result = result
+                task.result = result['payload']['text']
                 task.completed_at = datetime.utcnow().isoformat()
                 return [task]
 
