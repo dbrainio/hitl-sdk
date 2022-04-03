@@ -108,7 +108,7 @@ class Handl:
             version = self._version
         if not isinstance(version, (str, int)):
             raise TypeError('version can be only str, int or Callable[[], Union[str, int]]')
-        prefix = f'{self._prefix}_{self._version}'
+        prefix = f'{self._prefix}_{version}'
         if operation == OperationType.ocr:
             return f'{prefix}__ocr'
         elif operation == OperationType.labeling:
@@ -191,6 +191,10 @@ class Handl:
 
     async def get_tasks(self, project_id: str):
         url = f'{self._url}/projects/{project_id}/dataset'
+        return await self._request(url)
+
+    async def get_groups(self):
+        url = f'{self._url}/users/me/owned_groups'
         return await self._request(url)
 
     async def get_result(self, project_id: str, task_id: str):
