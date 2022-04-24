@@ -31,6 +31,7 @@ class SDK:
     document: Optional[Task] = None
     request_retry_strategy: Optional[Iterable] = default_retry_strategy()
     logger: Logger = getLogger('hitl-sdk')
+    confidence_threshold: Optional[Any] = None
 
     async def create_tasks(
             self,
@@ -46,6 +47,12 @@ class SDK:
 
         for task in tasks:
             if not task.images:
+                continue
+            if (
+                    self.confidence_threshold is not None
+                    and task.predict_confidence is not None
+                    and task.predict_confidence >= self.confidence_threshold
+            ):
                 continue
             uid = str(uuid4())
             name = f'{document_type}__{document_id}__{task.field_name}__{uid}.jpg'

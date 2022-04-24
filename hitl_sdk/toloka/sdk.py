@@ -3,7 +3,7 @@ import base64
 import os
 from dataclasses import dataclass, field
 from logging import getLogger, Logger
-from typing import Dict, Iterable, Iterator, List, Optional, Tuple, Union
+from typing import Dict, Iterable, Iterator, List, Optional, Tuple, Union, Any
 
 import aiohttp
 
@@ -20,6 +20,7 @@ class SDK:
     document: Optional[Task] = None
     request_retry_strategy: Optional[Iterable] = default_retry_strategy()
     logger: Logger = getLogger('hitl-sdk')
+    confidence_threshold: Optional[Any] = None
 
     @staticmethod
     def _get_task_key(task: Task) -> str:
