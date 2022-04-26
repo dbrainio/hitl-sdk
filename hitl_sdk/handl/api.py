@@ -4,12 +4,12 @@ import logging
 import time
 from datetime import date
 from enum import Enum
-from typing import Any, Callable, Dict, Union
+from typing import Any, Callable, Dict, Union, List
 
 import aiohttp.client_exceptions
 from aiohttp.client import ClientSession
 
-from .specs import get_ocr_spec
+from .specs import get_ocr_spec, get_bboxes_spec
 
 
 class ProjectState(str, Enum):
@@ -25,7 +25,8 @@ class OperationType(str, Enum):
 
 
 OperationSpecFactory = {
-    OperationType.ocr: get_ocr_spec
+    OperationType.ocr: get_ocr_spec,
+    OperationType.bboxes: get_bboxes_spec,
 }
 
 
@@ -101,7 +102,7 @@ class Handl:
         url = f'{self._url}/projects'
         return await self._request(url)
 
-    def _get_title(self, operation: OperationType, document_type: str = None) -> str:
+    def _get_title(self, operation: OperationType, document_type: str = None, labels: List[str] = None) -> str:
         if callable(self._version):
             version = self._version()
         else:
@@ -114,16 +115,17 @@ class Handl:
         elif operation == OperationType.labeling:
             return f'{prefix}__labeling__{document_type}'
         elif operation == OperationType.bboxes:
-            return f'{prefix}__bboxes__{document_type}'
+            return f'{prefix}__bboxes__{document_type}__' + '__'.join(labels)
         raise AssertionError('invalid operation type')
 
     async def get_or_create_project(
             self,
             operation: OperationType,
             document_type: str = None,
+            labels: List[str] = None,
             from_cache: bool = True,
     ) -> Dict[str, Any]:
-        title = self._get_title(operation, document_type)
+        title = self._get_title(operation, document_type, labels)
 
         if from_cache and title in self._projects:
             return self._projects[title]
@@ -139,7 +141,7 @@ class Handl:
                 break
         else:
             spec_factory = OperationSpecFactory[operation]
-            spec = spec_factory()
+            spec = spec_factory(document_type=document_type, labels=labels)
             project = await self._create_project(title, spec)
             project = await self._set_project_state(project['id'], ProjectState.online)
 

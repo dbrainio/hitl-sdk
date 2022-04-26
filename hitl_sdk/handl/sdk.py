@@ -1,10 +1,16 @@
 import asyncio
 import base64
+import json
+import logging
+from io import BytesIO
 from dataclasses import dataclass, field
 from datetime import datetime
 from logging import getLogger, Logger
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 from uuid import uuid4
+
+import numpy as np
+from PIL import Image
 
 from .api import Handl, OperationType
 from ..common import default_retry_strategy, Task, concat_v
@@ -23,15 +29,50 @@ handl = Handl(
 
 @dataclass
 class SDK:
-    host: str
+    host: Optional[str] = None
     token: Optional[str] = None
     license_id: Optional[str] = None
     system_info_token: Optional[str] = None
     tasks: Dict[str, Task] = field(default_factory=dict)
     document: Optional[Task] = None
     request_retry_strategy: Optional[Iterable] = default_retry_strategy()
-    logger: Logger = getLogger('hitl-sdk')
+    logger: Logger = getLogger('docr.hitl-sdk')
     confidence_threshold: Optional[Any] = None
+
+    async def annotate_bboxes(
+            self,
+            document_type: str,
+            document_id: str,
+            image: np.ndarray,
+            labels: Dict[str, List[Tuple[float, float, float, float]]],
+    ) -> Dict[str, List[Tuple[float, float, float, float]]]:
+        project = await handl.get_or_create_project(
+            OperationType.bboxes,
+            document_type=document_type,
+            labels=list(labels.keys()),
+        )
+        pid = project['id']
+
+        uid = str(uuid4())
+        name = f'{document_type}__{document_id}__{uid}.jpg'
+
+        img = BytesIO()
+        Image.fromarray(image, "RGB").save(img, format='JPEG')
+        content = img.getvalue()
+
+        predict = json.dumps(labels)
+        img = await handl.create_task(name, content, predict, pid)
+        task_id = img['id']
+
+        while True:
+            results = await handl.get_results(pid)
+            for result in results:
+                if task_id == result['id']:
+                    result = result['payload']['aabb']
+                    logging.error(result)
+                    return result
+            self.logger.info(f'HITL: wait for {name}')
+            await asyncio.sleep(10)
 
     async def create_tasks(
             self,
