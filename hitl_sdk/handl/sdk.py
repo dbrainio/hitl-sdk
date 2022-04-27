@@ -69,7 +69,7 @@ class SDK:
             for result in results:
                 if task_id == result['id']:
                     result = result['payload']['aabb']
-                    logging.error(result)
+                    logging.debug(result)
                     return result
             self.logger.info(f'HITL: wait for {name}')
             await asyncio.sleep(10)
