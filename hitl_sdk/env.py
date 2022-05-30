@@ -1,0 +1,11 @@
+import os
+
+HITL_BACKEND = os.getenv('HITL_BACKEND', 'toloka')  # or handl
+
+HANDL_GATEWAY = os.getenv('HANDL_GATEWAY')
+HANDL_USERNAME = os.getenv('HANDL_USERNAME')
+HANDL_PASSWORD = os.getenv('HANDL_PASSWORD')
+HANDL_GROUP = os.getenv('HANDL_GROUP', '7Z')
+HANDL_PREFIX = os.getenv('HANDL_PREFIX', 'HITL')
+HANDL_VERSION = os.getenv('HANDL_VERSION')
+HANDL_TASK_TIMEOUT = float(os.getenv('HANDL_TASK_TIMEOUT', 3600))
