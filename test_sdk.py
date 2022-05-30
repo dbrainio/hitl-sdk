@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-from hitl_sdk.sdk import SDK as HitlSDK, Task
+from hitl_sdk.toloka.sdk import SDK as HitlSDK, Task
 
 
 def test_retry():

@@ -15,7 +15,7 @@ from PIL import Image
 from .api import Handl, OperationType
 from ..common import default_retry_strategy, Task, concat_v
 from ..env import (HANDL_GATEWAY, HANDL_GROUP, HANDL_PASSWORD, HANDL_PREFIX, HANDL_TASK_TIMEOUT, HANDL_USERNAME,
-                   HANDL_VERSION)
+                   HANDL_VERSION, SUGGESTIONS_GATEWAY)
 
 handl = Handl(
     url=HANDL_GATEWAY,
@@ -37,6 +37,7 @@ class SDK:
     document: Optional[Task] = None
     request_retry_strategy: Optional[Iterable] = default_retry_strategy()
     logger: Logger = getLogger('docr.hitl-sdk')
+    suggestions_gateway: Optional[str] = SUGGESTIONS_GATEWAY
     confidence_threshold: Optional[Any] = None
 
     async def annotate_bboxes(

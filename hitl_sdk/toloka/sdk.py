@@ -8,6 +8,7 @@ from typing import Dict, Iterable, Iterator, List, Optional, Tuple, Union, Any
 import aiohttp
 
 from ..common import default_retry_strategy, Task
+from ..env import SUGGESTIONS_GATEWAY
 
 
 @dataclass
@@ -19,6 +20,7 @@ class SDK:
     tasks: Dict[str, Task] = field(default_factory=dict)
     document: Optional[Task] = None
     request_retry_strategy: Optional[Iterable] = default_retry_strategy()
+    suggestions_gateway: Optional[str] = SUGGESTIONS_GATEWAY
     logger: Logger = getLogger('hitl-sdk')
     confidence_threshold: Optional[Any] = None
 
@@ -121,6 +123,7 @@ class SDK:
                 'document_id': document_id,
                 'pipeline': task.pipeline,
                 'field_type': 'bool_array' if task.is_checkbox_array else None,
+                'suggestions_gateway': task.suggestions_gateway or self.suggestions_gateway,
             }
             for task in tasks
             if task.images
@@ -169,6 +172,7 @@ class SDK:
             ],
             'document_type': document_type,
             'document_id': document_id,
+            'suggestions_gateway': self.suggestions_gateway,
         }
 
         if not payload:
