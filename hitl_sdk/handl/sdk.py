@@ -9,7 +9,7 @@ from uuid import uuid4
 from .api import Handl, OperationType
 from ..common import default_retry_strategy, Task, concat_v
 from ..env import (HANDL_GATEWAY, HANDL_GROUP, HANDL_PASSWORD, HANDL_PREFIX, HANDL_TASK_TIMEOUT, HANDL_USERNAME,
-                   HANDL_VERSION)
+                   HANDL_VERSION, SUGGESTIONS_GATEWAY)
 
 handl = Handl(
     url=HANDL_GATEWAY,
@@ -30,6 +30,7 @@ class SDK:
     tasks: Dict[str, Task] = field(default_factory=dict)
     document: Optional[Task] = None
     request_retry_strategy: Optional[Iterable] = default_retry_strategy()
+    suggestions_gateway: Optional[str] = SUGGESTIONS_GATEWAY
     logger: Logger = getLogger('hitl-sdk')
 
     async def create_tasks(

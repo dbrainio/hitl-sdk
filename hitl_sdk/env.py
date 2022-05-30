@@ -1,6 +1,7 @@
 import os
 
 HITL_BACKEND = os.getenv('HITL_BACKEND', 'toloka')  # or handl
+SUGGESTIONS_GATEWAY = os.getenv('SUGGESTIONS_GATEWAY', None) or None
 
 HANDL_GATEWAY = os.getenv('HANDL_GATEWAY')
 HANDL_USERNAME = os.getenv('HANDL_USERNAME')

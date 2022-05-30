@@ -50,6 +50,7 @@ class Task:
     document_type: Optional[str] = None
     document_id: Optional[str] = None
     field_type: Optional[str] = None
+    suggestions_gateway: Optional[str] = None
 
     created_at: Optional[datetime.datetime] = field(
         default=None,
