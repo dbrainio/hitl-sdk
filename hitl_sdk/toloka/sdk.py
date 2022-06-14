@@ -225,7 +225,7 @@ class SDK:
             print(e)
 
     async def sync_tasks(self) -> bool:
-        tasks_ids = [
+        tasks_ids = set(
             _id.split(':')[0]
             for _id in filter(
                 lambda x: (
@@ -235,7 +235,7 @@ class SDK:
                 ),
                 self.tasks.keys(),
             )
-        ]
+        )
 
         has_updates = False
 
@@ -246,7 +246,7 @@ class SDK:
             tasks = await self._request(
                 method='GET',
                 data={
-                    'ids': tasks_ids,
+                    'ids': list(tasks_ids),
                 },
             )
 

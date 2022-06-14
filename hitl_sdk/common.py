@@ -2,6 +2,7 @@ import base64
 import datetime
 from dataclasses import dataclass, field
 from io import BytesIO
+from logging import getLogger
 from typing import Iterable, List, Optional, Union
 
 import dataclasses_json
@@ -9,6 +10,9 @@ import dateutil.parser
 from PIL import Image
 
 Value = Union[str, List[str]]
+
+
+logging = getLogger('docr.hitl-sdk')
 
 
 def concat_v(images: List[Union[bytes, str]]):
@@ -97,3 +101,13 @@ class Task:
 
     def is_timeout(self) -> bool:
         return self.state and 'timeout' in self.state
+
+    def autocomplete_by_deadline(self, now=None):
+        if now is None:
+            now = datetime.datetime.utcnow()
+        logging.debug(f'hitl:autocomplete_by_deadline deadline_at={self.deadline_at} now={now} id={self.id}')
+        if self.deadline_at:
+            if now >= self.deadline_at:
+                self.state = 'docr_deadline:timeout'
+                self.completed_at = now
+                self.result = self.result or self.predict or ''
