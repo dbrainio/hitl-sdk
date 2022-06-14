@@ -51,6 +51,12 @@ class Task:
     document_id: Optional[str] = None
     field_type: Optional[str] = None
     suggestions_gateway: Optional[str] = None
+    deadline_at: Optional[datetime.datetime] = field(
+        default=None,
+        metadata=dataclasses_json.config(
+            decoder=lambda x: dateutil.parser.parse(x) if x else None
+        )
+    )
 
     created_at: Optional[datetime.datetime] = field(
         default=None,

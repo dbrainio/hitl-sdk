@@ -124,6 +124,8 @@ class SDK:
                 'pipeline': task.pipeline,
                 'field_type': 'bool_array' if task.is_checkbox_array else None,
                 'suggestions_gateway': task.suggestions_gateway or self.suggestions_gateway,
+                'deadline_at': task.deadline_at and task.deadline_at.isoformat(),
+
             }
             for task in tasks
             if task.images
