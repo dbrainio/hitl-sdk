@@ -117,6 +117,7 @@ class SDK:
             integrity_check: bool = False,
             mock: bool = False,
             processing_type: Optional[str] = None,
+            deadline_at: datetime = None,
     ) -> Optional[Dict[str, Any]]:
         if only_classify or integrity_check or not only_ocr:
             raise AssertionError('hitl with handl backend supports only_ocr=True mode only')

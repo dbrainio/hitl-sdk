@@ -1,5 +1,6 @@
 import asyncio
 import base64
+import datetime
 import os
 from dataclasses import dataclass, field
 from logging import getLogger, Logger
@@ -161,6 +162,7 @@ class SDK:
             integrity_check: bool = False,
             mock: bool = False,
             processing_type: Optional[str] = None,
+            deadline_at: datetime.datetime = None,
     ) -> Optional[Task]:
         payload = {
             'images': [
@@ -175,6 +177,7 @@ class SDK:
             'document_type': document_type,
             'document_id': document_id,
             'suggestions_gateway': self.suggestions_gateway,
+            'deadline_at': deadline_at and deadline_at.isoformat(),
         }
 
         if not payload:
