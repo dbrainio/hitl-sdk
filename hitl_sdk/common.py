@@ -105,7 +105,7 @@ class Task:
     def autocomplete_by_deadline(self, now=None):
         if now is None:
             now = datetime.datetime.utcnow()
-        logging.debug(f'hitl:autocomplete_by_deadline deadline_at={self.deadline_at} now={now} id={self.id}')
+        # logging.debug(f'hitl:autocomplete_by_deadline deadline_at={self.deadline_at} now={now} id={self.id}')
         if self.deadline_at:
             if now >= self.deadline_at:
                 self.state = 'docr_deadline:timeout'
