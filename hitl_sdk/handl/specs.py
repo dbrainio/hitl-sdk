@@ -118,3 +118,72 @@ def get_bboxes_spec(labels: List[str], overlap: int = 1, **_) -> Dict[str, Any]:
         }
     }
     return spec
+
+
+def get_ocr_multiple_spec(labels: List[str], overlap: int = 1, **_) -> Dict[str, Any]:
+    values = [
+        {
+            "text": {
+                "type": "l7d",
+                "en-us": label,
+                "ru-ru": label,
+            },
+            "description": {
+                "type": "l7d",
+                "en-us": label,
+                "ru-ru": label,
+            },
+            "value": label,
+        }
+        for label in labels
+    ]
+    spec = {
+        "template": "ocr_multiple",
+        "overlap": overlap,
+        "input_spec": {
+            "image": {
+                "type": "url"
+            },
+            "text": {  # custom
+                "type": "string",
+                "default": {
+                    "type": "l7d"
+                }
+            },
+            "caption": {
+                "type": "string",
+                "default": {
+                    "type": "l7d",
+                    "en-us": "Перепишите текст по полям с картинки",
+                    "ru-ru": "Перепишите текст по полям с картинки"
+                }
+            },
+            "description": {
+                "type": "string",
+                "default": {
+                    "type": "l7d",
+                    "en-us": "Перепишите текст по полям с картинки со знаками препинания. Учитывайте регистр — если буквы маленькие, вводим маленькие, большие переписываем большими. Важно — пробелов быть не должно, но если вам вдруг попалась картинка с раздельным текстом - то пишите через пробел.",
+                    "ru-ru": "Перепишите текст по полям с картинки со знаками препинания. Учитывайте регистр — если буквы маленькие, вводим маленькие, большие переписываем большими. Важно — пробелов быть не должно, но если вам вдруг попалась картинка с раздельным текстом - то пишите через пробел."
+                }
+            },
+            "full_description": {
+                "type": "string",
+                "default": {
+                    "type": "l7d"
+                }
+            }
+        },
+        "output_spec": {
+            "ocrs": {
+                "type": "map",
+                "keys": {
+                    "type": "string",
+                    "values": values,
+                },
+                "items": {
+                    "type": "string",
+                },
+            },
+        },
+    }
+    return spec

@@ -206,6 +206,9 @@ class SDK:
 
         return self.document
 
+    async def ocr_multiple(self, *_, **__):
+        raise NotImplementedError()
+
     async def sync_document(self):
         try:
             resp = await self._request(

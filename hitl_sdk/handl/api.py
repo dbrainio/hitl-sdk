@@ -9,7 +9,7 @@ from typing import Any, Callable, Dict, Union, List
 import aiohttp.client_exceptions
 from aiohttp.client import ClientSession
 
-from .specs import get_ocr_spec, get_bboxes_spec
+from .specs import get_ocr_spec, get_bboxes_spec, get_ocr_multiple_spec
 
 
 class ProjectState(str, Enum):
@@ -22,10 +22,12 @@ class OperationType(str, Enum):
     labeling = 'labeling'
     bboxes = 'bboxes'
     ocr = 'ocr'
+    ocr_multiple = 'ocr_multiple'
 
 
 OperationSpecFactory = {
     OperationType.ocr: get_ocr_spec,
+    OperationType.ocr_multiple: get_ocr_multiple_spec,
     OperationType.bboxes: get_bboxes_spec,
 }
 
@@ -116,6 +118,8 @@ class Handl:
             return f'{prefix}__labeling__{document_type}'
         elif operation == OperationType.bboxes:
             return f'{prefix}__bboxes__{document_type}__' + '__'.join(labels)
+        elif operation == OperationType.ocr_multiple:
+            return f'{prefix}__ocr_multiple__{document_type}__' + '__'.join(labels)
         raise AssertionError('invalid operation type')
 
     async def get_or_create_project(

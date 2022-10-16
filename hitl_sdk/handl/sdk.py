@@ -9,6 +9,7 @@ from logging import getLogger, Logger
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 from uuid import uuid4
 
+import numpy
 import numpy as np
 from PIL import Image
 
@@ -140,6 +141,40 @@ class SDK:
             images=images,
         )
         return self.document
+
+    async def ocr_multiple(
+            self,
+            document_type: str,
+            document_id: str,
+            image: np.ndarray,
+            labels: List[str],
+    ) -> Dict[str, str]:
+        project = await handl.get_or_create_project(
+            OperationType.ocr_multiple,
+            document_type=document_type,
+            labels=labels,
+        )
+        pid = project['id']
+
+        uid = str(uuid4())
+        name = f'{document_type}__{document_id}__{uid}.jpg'
+
+        img = BytesIO()
+        Image.fromarray(image, "RGB").save(img, format='JPEG')
+        content = img.getvalue()
+
+        img = await handl.create_task(name, content, '', pid)
+        task_id = img['id']
+
+        while True:
+            results = await handl.get_results(pid)
+            for result in results:
+                if task_id == result['id']:
+                    result = result['payload']['ocrs']
+                    logging.debug(result)
+                    return result
+            self.logger.info(f'HITL: wait for {name}')
+            await asyncio.sleep(10)
 
     async def _sync_task(self, results: List[Dict[str, Any]], task: Task) -> List[Task]:
         if not task.completed_at:
