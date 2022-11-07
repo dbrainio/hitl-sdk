@@ -3,7 +3,7 @@ import datetime
 from dataclasses import dataclass, field
 from io import BytesIO
 from logging import getLogger
-from typing import Iterable, List, Optional, Union
+from typing import Iterable, List, Optional, Union, Dict
 
 import dataclasses_json
 import dateutil.parser
@@ -47,6 +47,13 @@ def default_retry_strategy() -> Iterable:
 
 @dataclasses_json.dataclass_json
 @dataclass
+class DocumentStruct:
+    document_type: str
+    fields: List[Dict]
+
+
+@dataclasses_json.dataclass_json
+@dataclass
 class Task:
     id: Optional[str] = None
     state: Optional[str] = None
@@ -55,6 +62,7 @@ class Task:
     document_id: Optional[str] = None
     field_type: Optional[str] = None
     suggestions_gateway: Optional[str] = None
+    document_structure: Optional[DocumentStruct] = None
     deadline_at: Optional[datetime.datetime] = field(
         default=None,
         metadata=dataclasses_json.config(
