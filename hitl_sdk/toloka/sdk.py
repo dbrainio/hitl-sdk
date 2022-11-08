@@ -120,6 +120,7 @@ class SDK:
                 'type': task_type,
                 'field_name': task.field_name,
                 'document_type': document_type,
+                'document_structure': task.document_structure,
                 'code': task.code,
                 'document_id': document_id,
                 'pipeline': task.pipeline,
