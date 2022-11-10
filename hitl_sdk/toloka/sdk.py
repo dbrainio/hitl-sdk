@@ -54,6 +54,7 @@ class SDK:
         if self.system_info_token:
             params['system_info'] = self.system_info_token
 
+        self.logger.debug(f'HITL SDK request: {method} {endpoint} params={params}')
         try:
             async with aiohttp.ClientSession(
                     connector=aiohttp.TCPConnector(verify_ssl=False),
@@ -120,7 +121,8 @@ class SDK:
                 'type': task_type,
                 'field_name': task.field_name,
                 'document_type': document_type,
-                'document_structure': task.document_structure.to_dict(),
+                'document_structure': task.document_structure.to_dict()
+                if task.document_structure is not None else None,
                 'code': task.code,
                 'document_id': document_id,
                 'pipeline': task.pipeline,
