@@ -8,7 +8,7 @@ from typing import Dict, Iterable, Iterator, List, Optional, Tuple, Union, Any
 
 import aiohttp
 
-from ..common import default_retry_strategy, Task
+from ..common import default_retry_strategy, Task, DocumentStruct
 from ..env import SUGGESTIONS_GATEWAY
 
 
@@ -97,7 +97,7 @@ class SDK:
             task_type: Optional[str] = 'standard',
             mock: bool = False,
             processing_type: Optional[str] = None,
-            document_structure: dict = None,
+            document_structure: DocumentStruct = None,
     ) -> List[Task]:
         body = [
             {
@@ -136,7 +136,8 @@ class SDK:
         if not body:
             return []
 
-        body[0]['document_structure'] = document_structure
+        if document_structure is not None:
+            body[0]['document_structure'] = document_structure.to_dict()
         # Костыль: нужно как-то передать document_structure, но лишь один раз.
 
         params = {}

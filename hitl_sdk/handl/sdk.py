@@ -14,7 +14,7 @@ import numpy as np
 from PIL import Image
 
 from .api import Handl, OperationType
-from ..common import default_retry_strategy, Task, concat_v
+from ..common import default_retry_strategy, Task, concat_v, DocumentStruct
 from ..env import (HANDL_GATEWAY, HANDL_GROUP, HANDL_PASSWORD, HANDL_PREFIX, HANDL_TASK_TIMEOUT, HANDL_USERNAME,
                    HANDL_VERSION, SUGGESTIONS_GATEWAY)
 
@@ -84,7 +84,7 @@ class SDK:
             task_type: Optional[str] = 'standard',
             mock: bool = False,
             processing_type: Optional[str] = None,
-            document_structure: dict = None,
+            document_structure: DocumentStruct = None,
     ) -> List[Task]:
         project = await handl.get_or_create_project(OperationType.ocr)
         pid = project['id']
