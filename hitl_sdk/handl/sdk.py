@@ -84,6 +84,7 @@ class SDK:
             task_type: Optional[str] = 'standard',
             mock: bool = False,
             processing_type: Optional[str] = None,
+            document_structure: dict = None,
     ) -> List[Task]:
         project = await handl.get_or_create_project(OperationType.ocr)
         pid = project['id']

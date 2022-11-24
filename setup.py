@@ -10,7 +10,7 @@ install_requires = [
 CONFIG = {
     'name': 'hitl-sdk',
     'url': '',
-    'version': '0.3.10',
+    'version': '0.4.1',
     'author': 'Dbrain',
     'install_requires': install_requires,
     'packages': find_packages(),

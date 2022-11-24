@@ -97,6 +97,7 @@ class SDK:
             task_type: Optional[str] = 'standard',
             mock: bool = False,
             processing_type: Optional[str] = None,
+            document_structure: dict = None,
     ) -> List[Task]:
         body = [
             {
@@ -121,8 +122,6 @@ class SDK:
                 'type': task_type,
                 'field_name': task.field_name,
                 'document_type': document_type,
-                'document_structure': task.document_structure.to_dict()
-                if task.document_structure is not None else None,
                 'code': task.code,
                 'document_id': document_id,
                 'pipeline': task.pipeline,
@@ -136,6 +135,9 @@ class SDK:
         ]
         if not body:
             return []
+
+        body[0]['document_structure'] = document_structure
+        # Костыль: нужно как-то передать document_structure, но лишь один раз.
 
         params = {}
         if mock:
