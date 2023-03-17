@@ -4,11 +4,11 @@ import datetime
 import os
 from dataclasses import dataclass, field
 from logging import getLogger, Logger
-from typing import Dict, Iterable, Iterator, List, Optional, Tuple, Union, Any
+from typing import Any, Dict, Iterable, Iterator, List, Optional, Tuple, Union
 
 import aiohttp
 
-from ..common import default_retry_strategy, Task, DocumentStruct
+from ..common import default_retry_strategy, DocumentStruct, Task
 from ..env import SUGGESTIONS_GATEWAY
 
 
@@ -40,6 +40,31 @@ class SDK:
                        data: Optional[Union[dict, list]] = None,
                        endpoint: str = 'tasks',
                        retry_times: Iterator = None) -> List[dict]:
+        if not retry_times:
+            retry_times = []
+        for retry_time in retry_times:
+            try:
+                return await self.__request(
+                    method=method,
+                    params=params,
+                    data=data,
+                    endpoint=endpoint,
+                )
+            except Exception as e:
+                print(e)
+                await asyncio.sleep(retry_time)
+        return await self.__request(
+            method=method,
+            params=params,
+            data=data,
+            endpoint=endpoint,
+        )
+
+    async def __request(self,
+                        method: str,
+                        params: Optional[dict] = None,
+                        data: Optional[Union[dict, list]] = None,
+                        endpoint: str = 'tasks') -> List[dict]:
         headers = {
             'Content-Type': 'application/json',
         }
@@ -55,39 +80,19 @@ class SDK:
             params['system_info'] = self.system_info_token
 
         self.logger.debug(f'HITL SDK request: {method} {endpoint} params={params}')
-        try:
-            async with aiohttp.ClientSession(
-                    connector=aiohttp.TCPConnector(verify_ssl=False),
-                    raise_for_status=True,
-            ) as session:
-                async with session.request(
-                        method=method,
-                        url=os.path.join(self.host, endpoint),
-                        headers=headers,
-                        params=params,
-                        json=data,
-                ) as resp:
-                    resp.raise_for_status()
-                    return await resp.json()
-        except Exception as e:
-            if retry_times is None:
-                if isinstance(self.request_retry_strategy, Iterable):
-                    retry_times = iter(self.request_retry_strategy)
-                else:
-                    retry_times = iter([])
-
-            for i in retry_times:
-                self.logger.warning(f"Request to hitl wasn't successfull. Wait {i} seconds to retry...")
-                await asyncio.sleep(i)
-                return await self._request(
+        async with aiohttp.ClientSession(
+                connector=aiohttp.TCPConnector(verify_ssl=False),
+                raise_for_status=True,
+        ) as session:
+            async with session.request(
                     method=method,
+                    url=os.path.join(self.host, endpoint),
+                    headers=headers,
                     params=params,
-                    data=data,
-                    endpoint=endpoint,
-                    retry_times=retry_times)
-
-            self.logger.error(f"Error with hitl: {e}")
-            raise e
+                    json=data,
+            ) as resp:
+                resp.raise_for_status()
+                return await resp.json()
 
     async def create_tasks(
             self,
