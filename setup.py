@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 
 install_requires = [
-    'aiohttp==3.6.2',
+    'aiohttp==3.8.5',
     'dataclasses-json==0.3.5',
     'python-dateutil==2.8.0',
 ]
